@@ -3,13 +3,14 @@
 #
 # Omkar H. Ramachandran
 # omkar.ramachandran@colorado.edu
-# 
+#
 # Refer to econ_sim.pdf for method
 #
 
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as scp
+import simplex
 import math
 import subprocess
 
@@ -58,7 +59,9 @@ class Merchant:
         b[-3] = C_next.wealth
         b[-2] = 5
         b[-1] = -safety[C_current.ID,C_next.ID]
-        res = scp.linprog(C,A_ub=A,b_ub=b)
+        b = b[NC:]
+        A = A[NC:]
+        res = simplex.improvedSimplex(C,A_ub=A,b_ub=b)
     #    print(res)
         profile = np.append(-res['fun'],res['x'])
         if(len(profile) == NC+2):
@@ -114,7 +117,7 @@ class City:
     def compute_buy_price(self,quantity):
         Sum = self.buy*quantity
         return np.sum(Sum)
-    
+
     def estimated_selling_price(self,quantity,time):
         Sum = self.sell*quantity
         return np.sum(Sum)*time_weight(time)
@@ -122,7 +125,7 @@ class City:
     def buy_price(self,Commodity_ID,Nm):
         """ Computes the price that the merchant will get if we wants to SELL commodity COMMODITY_ID at City self"""
         if(self.consrate[Commodity_ID] <= self.prodrate[Commodity_ID]):
-        # If the city produces more than it consumes, it will never buy from the 
+        # If the city produces more than it consumes, it will never buy from the
         # merchant
             return 0
         dTi = self.stock[Commodity_ID]/(self.consrate[Commodity_ID]-self.prodrate[Commodity_ID])
@@ -143,7 +146,7 @@ class City:
         else:
             # If there are other merchants in the city, the price drops as sqrt(num_merchants)
             coefficient *= 1/np.sqrt(self.num_merchants)
-    
+
         return coefficient*cofactor
 
     def sell_price(self,Commodity_ID):
@@ -155,7 +158,7 @@ class City:
                 coefficient *= 0.5
             else:
                 coefficient *= np.sqrt(self.num_merchants)
-            
+
             cofactor = 1.0
             dT = self.prodrate[Commodity_ID] - self.consrate[Commodity_ID]
             if(dT > dTmax):
@@ -171,7 +174,7 @@ class City:
                 coefficient *= 0.5
             else:
                 coefficient *= np.sqrt(self.num_merchants)
-            
+
             cofactor = 1.0
             dT = self.stock[Commodity_ID]/(self.consrate[Commodity_ID] - self.prodrate[Commodity_ID])
             if(dT/dTideal > 0.9):
@@ -187,7 +190,7 @@ class City:
 
     def add_merchant(self,M):
         self.num_merchants += 1
-    
+
     def remove_merchant(self,M):
         self.num_merchants -= 1
 
@@ -212,7 +215,7 @@ for r in range(Nruns):
     Nm = 5
     NM = np.zeros([Nruns,Nt])
     Nalive = Nm
-    M_W = np.zeros([Nt,2]) 
+    M_W = np.zeros([Nt,2])
     cum_tax=0
 
     Net_wealth = -np.ones(Nt-1)*10003
@@ -231,19 +234,19 @@ for r in range(Nruns):
     C3 = City(2,50*np.ones(NC),np.zeros(NC),np.zeros(NC),5000,np.zeros(NC),np.ones(NC),1000,[0,1],[5,5])
     safety[C1.ID,C2.ID] = 0.0
     safety[C2.ID,C1.ID] = 0.0
-     
+
     # C1 produces commodity 0,3 and 4
     #C1.prodrate = np.array([0,2,0,0,2,2])
     C1.prodrate = np.array([2,0,2,0])
     # C2 produces commodity 1,2 and 5
-     
+
     C2.prodrate = np.array([0,2,0,2])
     C3.prodrate = np.array([0,0,2,0])
     C_list = [C1,C2,C3]
 
     print("Running realization",r+1)
     for time in range(1,Nt):
-        for C in C_list:  
+        for C in C_list:
             for i in range(NC):
                 C.sell[i] = C.buy_price(i,C.num_merchants)
                 C.buy[i] = C.sell_price(i)

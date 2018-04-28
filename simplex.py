@@ -134,7 +134,14 @@ def improvedSimplex(cost,A_ub=None,b_ub=np.empty([0]),A_eq=None,b_eq=np.empty([0
     cost = np.concatenate((cost,np.zeros(A.shape[0])),axis=0)
     angles = np.arccos(np.matmul(np.transpose(A),b)/(np.linalg.norm(A,axis=0)*np.linalg.norm(b)))
     argpart = np.argpartition(angles,A.shape[0])
-    A_B_inv = np.linalg.inv(A[:,argpart[:A.shape[0]]])
+    try:
+        A_B_inv = np.linalg.inv(A[:,argpart[:A.shape[0]]])
+    except:
+        print("{0}\n{1}\n{2}".format(origCost,A_ub,b_ub))
+        print(argpart)
+        print(A)
+        print(A[:,argpart[:A.shape[0]]])
+        raise
     A = np.matmul(A_B_inv,A)
     b = np.matmul(A_B_inv,b)
     cost += np.matmul(-cost[argpart[:A.shape[0]]],A)
@@ -177,6 +184,7 @@ def improvedSimplex(cost,A_ub=None,b_ub=np.empty([0]),A_eq=None,b_eq=np.empty([0
     return {'x': ans, 'fun': np.dot(ans,origCost), 'iters': iters}
 
 np.set_printoptions(linewidth=1000)
+'''
 print(simplex(np.array([-2,-3,-4]),np.array([[3,2,1],[2,5,3]]),np.array([10,15])))
 print(scp.linprog(np.array([-2,-3,-4]),np.array([[3,2,1],[2,5,3]]),np.array([10,15])))
 print(improvedSimplex(np.array([-2,-3,-4]),np.array([[3,2,1],[2,5,3]]),np.array([10,15])))
@@ -190,7 +198,7 @@ print(simplex(np.array([-10,-24,-20,-20,-25]),np.array([[1,1,2,3,5],[2,4,3,2,1]]
 print(scp.linprog(np.array([-10,-24,-20,-20,-25]),np.array([[1,1,2,3,5],[2,4,3,2,1]]),np.array([19,57])))
 print(improvedSimplex(np.array([-10,-24,-20,-20,-25]),np.array([[1,1,2,3,5],[2,4,3,2,1]]),np.array([19,57])))
 
-'''
+
 # Buy coefficients
 C_final = np.array([0.0,0.0,2.0,1.5,2.0,0.0])
 C_initial = np.array([1.0,1.5,1.5,0.5,1.0,1.0])
