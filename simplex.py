@@ -134,14 +134,18 @@ def improvedSimplex(cost,A_ub=None,b_ub=np.empty([0]),A_eq=None,b_eq=np.empty([0
     cost = np.concatenate((cost,np.zeros(A.shape[0])),axis=0)
     angles = np.arccos(np.matmul(np.transpose(A),b)/(np.linalg.norm(A,axis=0)*np.linalg.norm(b)))
     argpart = np.argpartition(angles,A.shape[0])
-    try:
-        A_B_inv = np.linalg.inv(A[:,argpart[:A.shape[0]]])
-    except:
-        print("{0}\n{1}\n{2}".format(origCost,A_ub,b_ub))
-        print(argpart)
-        print(A)
-        print(A[:,argpart[:A.shape[0]]])
-        raise
+    for i in range(1,A.shape[0]):
+        end = False
+        while(not end):
+            try:
+                np.linalg.solve(A[:,argpart[:i]],A[:,argpart[i]])
+                end = True
+            except:
+                junk = argpart[i]
+                np.delete(argpart,i)
+                np.append(argpart,junk)
+
+    A_B_inv = np.linalg.inv(A[:,argpart[:A.shape[0]]])
     A = np.matmul(A_B_inv,A)
     b = np.matmul(A_B_inv,b)
     cost += np.matmul(-cost[argpart[:A.shape[0]]],A)
@@ -179,7 +183,6 @@ def improvedSimplex(cost,A_ub=None,b_ub=np.empty([0]),A_eq=None,b_eq=np.empty([0
         elif(i>=origA.shape[0] and (not temp[0] or (b[temp[1]]>-1e-12 and b[temp[1]]<1e-12))):
             nonZeroVars.append(i-origA.shape[0])
     ans = np.zeros(origA.shape[1])
-    print("\n\n{0}\n\n".format(origA[constraints][:,nonZeroVars]))
     ans[nonZeroVars] = np.matmul(np.linalg.inv(origA[constraints][:,nonZeroVars]),origB[constraints])
     return {'x': ans, 'fun': np.dot(ans,origCost), 'iters': iters}
 

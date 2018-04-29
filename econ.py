@@ -61,7 +61,7 @@ class Merchant:
         b[-1] = -safety[C_current.ID,C_next.ID]
         b = b[NC:]
         A = A[NC:]
-        res = simplex.improvedSimplex(C,A_ub=A,b_ub=b)
+        res = simplex.simplex(C,A_ub=A,b_ub=b)
     #    print(res)
         profile = np.append(-res['fun'],res['x'])
         if(len(profile) == NC+2):
