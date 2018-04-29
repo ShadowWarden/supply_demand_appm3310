@@ -139,12 +139,11 @@ def improvedSimplex(cost,A_ub=None,b_ub=np.empty([0]),A_eq=None,b_eq=np.empty([0
         while(not end):
             try:
                 np.linalg.solve(A[:,argpart[:i]],A[:,argpart[i]])
-                end = True
-            except:
                 junk = argpart[i]
                 np.delete(argpart,i)
                 np.append(argpart,junk)
-
+            except:
+                end = True
     A_B_inv = np.linalg.inv(A[:,argpart[:A.shape[0]]])
     A = np.matmul(A_B_inv,A)
     b = np.matmul(A_B_inv,b)
